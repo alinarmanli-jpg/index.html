@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Studio - Yapay Zeka Destekli Çalışma ve Ders Planlayıcı</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti for Level Ups -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif']
+                    },
+                    colors: {
+                        studio: {
+                            dark: '#0B0F19',
+                            card: '#151D2A',
+                            border: '#2A364F',
+                            accent: '#10B981',
+                            pomo: '#FF5E62',
+                            shortBreak: '#3B82F6',
+                            longBreak: '#8B5CF6',
+                            ai: '#8B5CF6',
+                            gold: '#F59E0B'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                        'float': 'float 4s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-6px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-10px) rotate(2deg)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F8FAFC;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .glass-card {
+            background: rgba(21, 29, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+        }
+
+        .glass-card-sm {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+        }
+
+        /* SVG Circular Progress Bar */
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A364F;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3B82F6;
+        }
+
+        /* Custom Toast Notification */
+        .toast {
+            animation: slideIn 0.3s ease forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-studio-pomo selection:text-white">
+
+    <header class="border-b border-studio-border/60 bg-studio-dark/90 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-studio-pomo to-studio-ai p-0.5 shadow-lg shadow-studio-pomo/20 flex items-center justify-center">
+                <div class="w-full h-full bg-studio-dark rounded-[14px] flex items-center justify-center text-studio-pomo font-black text-xl">
+                    <i class="fa-solid fa-brain animate-bounce-subtle text-studio-ai"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold font-display tracking-tight text-white flex items-center gap-2">
+                    FOCUS STUDIO <span class="text-[10px] bg-studio-ai/20 text-studio-ai border border-studio-ai/30 px-2 py-0.5 rounded-full uppercase tracking-widest font-black">AI PRO</span>
+                </h1>
+                <p class="text-xs text-slate-400 font-medium">Akıllı Ders Planlayıcı, Makaleler & Dijital Kütüphane</p>
+            </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="flex bg-studio-card/80 p-1 rounded-2xl border border-studio-border text-xs font-bold gap-1 overflow-x-auto max-w-full">
+            <button onclick="switchTab('main')" id="tab-btn-main" class="px-4 py-2 rounded-xl text-white bg-studio-accent font-extrabold transition">
+                <i class="fa-solid fa-gauge-high mr-1.5"></i> Stüdyo & Sayaç
+            </button>
+            <button onclick="switchTab('articles')" id="tab-btn-articles" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-newspaper mr-1.5"></i> Okuma & Makaleler
+            </button>
+            <button onclick="switchTab('library')" id="tab-btn-library" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-book-bookmark mr-1.5"></i> Sınıf Kütüphanesi & PDF
+            </button>
+        </div>
+
+        <!-- User Stats Bar -->
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 bg-studio-card/90 px-3.5 py-1.5 rounded-xl border border-studio-border" title="Günlük Odaklanma Serisi">
+                <i class="fa-solid fa-flame text-amber-500 text-base animate-pulse"></i>
+                <div class="text-xs">
+                    <span class="text-slate-400 block text-[10px] font-bold leading-none">SERİ</span>
+                    <strong id="ui-streak" class="text-white font-extrabold text-sm">1 Gün</strong>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 bg-studio-card/90 px-3.5 py-1.5 rounded-xl border border-studio-border">
+                <div class="text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <span class="text-[10px] text-studio-accent font-black uppercase tracking-wider">SEVİYE</span>
+                        <strong id="ui-level" class="text-xs font-extrabold text-white">1</strong>
+                    </div>
+                    <div class="w-20 sm:w-24 h-2 bg-studio-dark rounded-full mt-1 overflow-hidden p-0.5 border border-studio-border/50">
+                        <div id="ui-xp-bar" class="h-full bg-gradient-to-r from-studio-accent to-emerald-300 rounded-full transition-all duration-500" style="width: 35%"></div>
+                    </div>
+                </div>
+                <div class="text-[10px] font-bold text-slate-400" id="ui-xp-text">35/100 XP</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 md:p-6 lg:p-8">
+
+        <!-- TAB 1: MAIN STUDIO & TIMER DASHBOARD -->
+        <div id="tab-view-main" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: POMODORO, AI & SOUNDS (5 COLS) -->
+            <section class="lg:col-span-5 flex flex-col gap-6">
+
+                <div id="pomo-card" class="glass-card p-6 md:p-8 flex flex-col items-center justify-between relative overflow-hidden transition-all duration-500">
+                    <div id="pomo-glow" class="absolute -top-24 -left-24 w-72 h-72 bg-studio-pomo/15 rounded-full blur-3xl pointer-events-none transition-all duration-700"></div>
+
+                    <!-- Mode Selector -->
+                    <div class="flex bg-studio-dark/80 p-1.5 rounded-2xl border border-studio-border gap-1 w-full max-w-xs mb-6 relative z-10">
+                        <button onclick="setTimerMode('pomo')" id="mode-pomo" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all bg-studio-pomo text-white shadow-lg shadow-studio-pomo/30">
+                            <i class="fa-solid fa-fire mr-1"></i> Odak
+                        </button>
+                        <button onclick="setTimerMode('shortBreak')" id="mode-shortBreak" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-mug-hot mr-1"></i> Mola
+                        </button>
+                        <button onclick="setTimerMode('longBreak')" id="mode-longBreak" class="flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-bed mr-1"></i> Uzun Mola
+                        </button>
+                    </div>
+
+                    <div class="relative w-64 h-64 sm:w-72 sm:h-72 my-2 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90 drop-shadow-2xl">
+                            <circle cx="50%" cy="50%" r="110" stroke="#151D2A" stroke-width="12" fill="transparent" />
+                            <circle id="timer-progress" class="progress-ring__circle" cx="50%" cy="50%" r="110" stroke="#FF5E62" stroke-width="12" stroke-linecap="round" fill="transparent" stroke-dasharray="691.15" stroke-dashoffset="0" />
+                        </svg>
+
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center z-10">
+                            <div id="mascot-avatar" class="text-4xl mb-1 animate-float cursor-pointer hover:scale-125 transition-transform" onclick="petMascot()" title="Maskotunuza tıklayın!">
+                                🦉
+                            </div>
+                            <span id="timer-display" class="font-display font-black text-5xl sm:text-6xl text-white tracking-wider my-1">
+                                25:00
+                            </span>
+                            <span id="timer-session-tag" class="text-[11px] font-extrabold uppercase tracking-widest text-slate-400 bg-studio-dark/80 px-3 py-1 rounded-full border border-studio-border">
+                                Çalışma Oturumu #1
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Timer Controls -->
+                    <div class="flex items-center gap-4 mt-6 w-full max-w-xs z-10">
+                        <button onclick="toggleTimer()" id="btn-timer-toggle" class="flex-1 bg-gradient-to-r from-studio-pomo to-rose-600 hover:opacity-90 text-white font-extrabold text-base py-4 px-6 rounded-2xl shadow-xl shadow-studio-pomo/25 transition active:scale-95 flex items-center justify-center gap-2">
+                            <i id="btn-timer-icon" class="fa-solid fa-play"></i>
+                            <span id="btn-timer-text">BAŞLAT</span>
+                        </button>
+                        <button onclick="resetTimer()" title="Sıfırla" class="p-4 bg-studio-dark hover:bg-studio-border text-slate-300 hover:text-white rounded-2xl border border-studio-border transition active:scale-95">
+                            <i class="fa-solid fa-rotate-right"></i>
+                        </button>
+                        <button onclick="skipTimerSession()" title="Geç" class="p-4 bg-studio-dark hover:bg-studio-border text-slate-300 hover:text-white rounded-2xl border border-studio-border transition active:scale-95">
+                            <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                    </div>
+
+                    <div class="mt-5 flex items-center justify-between w-full text-xs text-slate-400 border-t border-studio-border/50 pt-4">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-sliders text-studio-accent"></i> Hızlı Dakikalar:</span>
+                        <div class="flex gap-2">
+                            <button onclick="setCustomMinutes(15)" class="px-2.5 py-1 rounded-lg bg-studio-dark border border-studio-border hover:text-white transition">15dk</button>
+                            <button onclick="setCustomMinutes(25)" class="px-2.5 py-1 rounded-lg bg-studio-dark border border-studio-border hover:text-white transition">25dk</button>
+                            <button onclick="setCustomMinutes(45)" class="px-2.5 py-1 rounded-lg bg-studio-dark border border-studio-border hover:text-white transition">45dk</button>
+                            <button onclick="setCustomMinutes(60)" class="px-2.5 py-1 rounded-lg bg-studio-dark border border-studio-border hover:text-white transition">60dk</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-studio-ai/20 text-studio-ai flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3 class="font-extrabold text-base text-white font-display">Yapay Zeka Çalışma Koçu</h3>
+                        </div>
+                        <span class="text-[10px] bg-studio-ai/20 text-studio-ai border border-studio-ai/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">AI Destek</span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="generateAITasks()" class="p-2.5 bg-studio-dark/80 hover:bg-studio-border border border-studio-border hover:border-studio-ai rounded-xl text-left transition group">
+                            <i class="fa-solid fa-list-check text-studio-accent mb-1 block group-hover:scale-110 transition"></i>
+                            <span class="text-[11px] font-bold text-white block">Otomatik Görev</span>
+                            <span class="text-[9px] text-slate-400">Plan Oluştur</span>
+                        </button>
+                        <button onclick="askAITutor('tip')" class="p-2.5 bg-studio-dark/80 hover:bg-studio-border border border-studio-border hover:border-studio-ai rounded-xl text-left transition group">
+                            <i class="fa-solid fa-lightbulb text-studio-gold mb-1 block group-hover:scale-110 transition"></i>
+                            <span class="text-[11px] font-bold text-white block">Ders İpucu</span>
+                            <span class="text-[9px] text-slate-400">Odak Arttır</span>
+                        </button>
+                        <button onclick="askAITutor('explain')" class="p-2.5 bg-studio-dark/80 hover:bg-studio-border border border-studio-border hover:border-studio-ai rounded-xl text-left transition group">
+                            <i class="fa-solid fa-graduation-cap text-studio-shortBreak mb-1 block group-hover:scale-110 transition"></i>
+                            <span class="text-[11px] font-bold text-white block">Konu Özeti</span>
+                            <span class="text-[9px] text-slate-400">Hızlı Açıklama</span>
+                        </button>
+                    </div>
+
+                    <div id="ai-response-box" class="p-3.5 bg-studio-dark/90 border border-studio-border rounded-xl text-xs text-slate-300 min-h-[70px] flex items-center justify-start relative">
+                        <i class="fa-solid fa-robot text-studio-ai text-lg mr-2 shrink-0"></i>
+                        <p id="ai-text" class="leading-relaxed">Merhaba! Ben AI Çalışma Koçun. Yukardaki butonlara tıklayarak veya soru sorarak derslerine yönelik rehberlik alabilirsin!</p>
+                    </div>
+
+                    <form onsubmit="handleAIQuery(event)" class="flex gap-2">
+                        <input type="text" id="ai-input" placeholder="Soru sor: Örn. Matematikte problem çözme hızı nasıl artar?" class="flex-1 bg-studio-dark border border-studio-border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-studio-ai transition">
+                        <button type="submit" class="bg-studio-ai hover:bg-purple-500 text-white font-bold px-4 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-paper-plane"></i> Sor
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Ambient Sounds & Breathing -->
+                <div class="glass-card p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-headphones"></i>
+                            </div>
+                            <h3 class="font-extrabold text-base text-white font-display">Arka Plan Odak Sesleri</h3>
+                        </div>
+                        <button onclick="stopAmbientSound(); showNotification('🔇 Sesler kapatıldı.');" class="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 px-3 py-1 rounded-xl font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-volume-xmark"></i> Sesi Kapat
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <button id="sound-btn-rain" onclick="toggleAmbientSound('rain')" class="glass-card-sm p-3.5 flex flex-col items-center gap-2 hover:border-cyan-500/50 transition group">
+                            <i id="sound-icon-rain" class="fa-solid fa-cloud-showers-heavy text-xl text-slate-400 group-hover:text-cyan-400 transition"></i>
+                            <span class="text-xs font-bold text-slate-300">Yağmur</span>
+                        </button>
+                        <button id="sound-btn-cafe" onclick="toggleAmbientSound('cafe')" class="glass-card-sm p-3.5 flex flex-col items-center gap-2 hover:border-amber-500/50 transition group">
+                            <i id="sound-icon-cafe" class="fa-solid fa-mug-saucer text-xl text-slate-400 group-hover:text-amber-400 transition"></i>
+                            <span class="text-xs font-bold text-slate-300">Kafe</span>
+                        </button>
+                        <button id="sound-btn-waves" onclick="toggleAmbientSound('waves')" class="glass-card-sm p-3.5 flex flex-col items-center gap-2 hover:border-studio-accent/50 transition group">
+                            <i id="sound-icon-waves" class="fa-solid fa-water text-xl text-slate-400 group-hover:text-studio-accent transition"></i>
+                            <span class="text-xs font-bold text-slate-300">Okyanus</span>
+                        </button>
+                        <button id="sound-btn-white" onclick="toggleAmbientSound('white')" class="glass-card-sm p-3.5 flex flex-col items-center gap-2 hover:border-purple-500/50 transition group">
+                            <i id="sound-icon-white" class="fa-solid fa-wind text-xl text-slate-400 group-hover:text-purple-400 transition"></i>
+                            <span class="text-xs font-bold text-slate-300">Derin Odak</span>
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- RIGHT COLUMN: DYNAMIC WEEKLY PLAN, GOALS, BADGES & NOTES (7 COLS) -->
+            <section class="lg:col-span-7 flex flex-col gap-6">
+
+                <div class="glass-card p-6 flex flex-col">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-studio-shortBreak/20 text-studio-shortBreak flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-calendar-days"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-base text-white font-display">Haftalık Çalışma Programı</h3>
+                                <p class="text-xs text-slate-400">Kendi haftalık ders ve çalışma planını özgürce oluştur!</p>
+                            </div>
+                        </div>
+                        <button onclick="clearAllWeeklyPlan()" class="text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-3 py-1.5 rounded-xl transition">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Planı Temizle
+                        </button>
+                    </div>
+
+                    <!-- Day Grid Container -->
+                    <div id="weekly-plan-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                        <!-- Dynamic Day Cards generated via JS -->
+                    </div>
+                </div>
+
+                <div class="glass-card p-6 flex flex-col min-h-[360px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-studio-accent/20 text-studio-accent flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <h3 class="font-extrabold text-base text-white font-display">Günlük Çalışma Hedefleri</h3>
+                        </div>
+                        <span id="task-counter" class="text-xs font-extrabold text-slate-300 bg-studio-dark px-3 py-1 rounded-full border border-studio-border">0/0 Tamamlandı</span>
+                    </div>
+
+                    <form onsubmit="handleAddTask(event)" class="flex gap-2 mb-4">
+                        <input type="text" id="task-input" placeholder="Yeni bir ders hedefi ekle (+20 XP)..." class="flex-1 bg-studio-dark/90 border border-studio-border rounded-xl px-4 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-studio-accent transition">
+                        <select id="task-tag" class="bg-studio-dark border border-studio-border text-slate-300 rounded-xl px-3 py-3 text-xs focus:outline-none focus:border-studio-accent">
+                            <option value="Matematik">📚 Matematik</option>
+                            <option value="Yazılım">💻 Yazılım</option>
+                            <option value="Fen/Fizik">🔬 Fen / Fizik</option>
+                            <option value="Edebiyat/Dil">🌍 Edebiyat/Dil</option>
+                            <option value="Genel">📌 Genel</option>
+                        </select>
+                        <button type="submit" class="bg-studio-accent hover:bg-emerald-400 text-slate-950 font-black px-5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-lg shadow-studio-accent/20">
+                            <i class="fa-solid fa-plus"></i> Ekle
+                        </button>
+                    </form>
+
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="setFilter('all')" id="filter-all" class="text-xs font-extrabold px-3.5 py-1.5 rounded-lg bg-studio-accent text-slate-950 transition">Tümü</button>
+                        <button onclick="setFilter('active')" id="filter-active" class="text-xs font-extrabold px-3.5 py-1.5 rounded-lg bg-studio-dark text-slate-400 hover:text-white border border-studio-border transition">Devam Edenler</button>
+                        <button onclick="setFilter('completed')" id="filter-completed" class="text-xs font-extrabold px-3.5 py-1.5 rounded-lg bg-studio-dark text-slate-400 hover:text-white border border-studio-border transition">Tamamlananlar</button>
+                    </div>
+
+                    <div id="task-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[220px]">
+                        <!-- Dynamic tasks rendered here -->
+                    </div>
+                </div>
+
+                <!-- Badges & Scratchpad -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-xl bg-studio-gold/20 text-studio-gold flex items-center justify-center font-bold">
+                                    <i class="fa-solid fa-trophy"></i>
+                                </div>
+                                <h3 class="font-extrabold text-base text-white font-display">Rozetler</h3>
+                            </div>
+                            <span id="achievement-counter" class="text-xs font-bold text-slate-400">1 / 4 Açıldı</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div id="badge-1" class="p-3 rounded-2xl bg-studio-dark/90 border border-studio-gold/60 text-center flex flex-col items-center gap-1 shadow-lg shadow-studio-gold/10">
+                                <div class="w-8 h-8 rounded-full bg-studio-gold/20 text-studio-gold flex items-center justify-center text-sm font-black">🌱</div>
+                                <span class="text-[11px] font-extrabold text-white">İlk Adım</span>
+                            </div>
+                            <div id="badge-2" class="p-3 rounded-2xl bg-studio-dark/40 border border-studio-border text-center flex flex-col items-center gap-1 opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-sm font-black">🔥</div>
+                                <span class="text-[11px] font-extrabold text-slate-300">Odak Ustası</span>
+                            </div>
+                            <div id="badge-3" class="p-3 rounded-2xl bg-studio-dark/40 border border-studio-border text-center flex flex-col items-center gap-1 opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-sm font-black">🤖</div>
+                                <span class="text-[11px] font-extrabold text-slate-300">AI Bilgini</span>
+                            </div>
+                            <div id="badge-4" class="p-3 rounded-2xl bg-studio-dark/40 border border-studio-border text-center flex flex-col items-center gap-1 opacity-50">
+                                <div class="w-8 h-8 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center text-sm font-black">⚡</div>
+                                <span class="text-[11px] font-extrabold text-slate-300">Seviye 3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 flex flex-col">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-pen-to-square text-studio-gold"></i>
+                                <h3 class="font-extrabold text-sm text-white font-display">Hızlı Not Karalama</h3>
+                            </div>
+                            <span class="text-[10px] text-slate-500">Otomatik Kayıt</span>
+                        </div>
+                        <textarea id="scratchpad" oninput="saveScratchpad()" placeholder="Unutmaman gereken formülleri ve fikirleri buraya not et..." class="w-full flex-1 min-h-[110px] bg-studio-dark/90 border border-studio-border rounded-xl p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-studio-gold resize-none"></textarea>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- TAB 2: ARTICLES & READING HUB -->
+        <div id="tab-view-articles" class="hidden flex-col gap-6">
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-black font-display text-white flex items-center gap-2">
+                            <i class="fa-solid fa-newspaper text-studio-ai"></i> İlham Veren Makaleler & Rehberler
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Verimli çalışma teknikleri, sınav stratejileri ve odaklanma yöntemlerini keşfedip okuyun!</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="filterArticles('all')" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-studio-ai text-white">Tüm Makaleler</button>
+                        <button onclick="filterArticles('teknik')" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-studio-dark border border-studio-border text-slate-300">Çalışma Teknikleri</button>
+                        <button onclick="filterArticles('motivasyon')" class="text-xs font-bold px-3 py-1.5 rounded-xl bg-studio-dark border border-studio-border text-slate-300">Zihin & Motivasyon</button>
+                    </div>
+                </div>
+
+                <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Articles Rendered Here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: GRADE LIBRARY & PDF RESOURCES -->
+        <div id="tab-view-library" class="hidden flex-col gap-6">
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-black font-display text-white flex items-center gap-2">
+                            <i class="fa-solid fa-book-bookmark text-studio-accent"></i> Sınıf Seviyeli Dijital Kütüphane
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">İstediğiniz sınıfı seçin; PDF konu anlatımlarına, özet föylere ve soru bankalarına anında ulaşın!</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-studio-dark p-2 rounded-2xl border border-studio-border">
+                        <i class="fa-solid fa-magnifying-glass text-slate-400 ml-2"></i>
+                        <input type="text" id="library-search" oninput="renderLibrary()" placeholder="Ders veya konu ara..." class="bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none w-48">
+                    </div>
+                </div>
+
+                <!-- Grade Selector Tabs -->
+                <div class="flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none border-b border-studio-border/60">
+                    <button onclick="selectGrade('all')" id="grade-btn-all" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-accent text-slate-950 transition">
+                        Tüm Sınıflar
+                    </button>
+                    <button onclick="selectGrade('8')" id="grade-btn-8" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        8. Sınıf (LGS)
+                    </button>
+                    <button onclick="selectGrade('9')" id="grade-btn-9" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        9. Sınıf
+                    </button>
+                    <button onclick="selectGrade('10')" id="grade-btn-10" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        10. Sınıf
+                    </button>
+                    <button onclick="selectGrade('11')" id="grade-btn-11" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        11. Sınıf
+                    </button>
+                    <button onclick="selectGrade('12')" id="grade-btn-12" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        12. Sınıf & YKS
+                    </button>
+                    <button onclick="selectGrade('uni')" id="grade-btn-uni" class="grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition">
+                        Yazılım & Üniversite
+                    </button>
+                </div>
+
+                <!-- PDF Resource List Grid -->
+                <div id="library-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic PDF Resources Rendered Here -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: ARTICLE READER -->
+    <div id="article-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass-card max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 relative border border-studio-border">
+            <button onclick="closeArticleModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white w-9 h-9 rounded-full bg-studio-dark flex items-center justify-center border border-studio-border transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <span id="modal-art-category" class="text-[10px] font-black uppercase tracking-widest bg-studio-ai/20 text-studio-ai px-3 py-1 rounded-full border border-studio-ai/30 mb-3 inline-block">Kategori</span>
+            <h2 id="modal-art-title" class="text-2xl md:text-3xl font-black font-display text-white mb-3 leading-tight">Makale Başlığı</h2>
+            <div class="flex items-center gap-4 text-xs text-slate-400 mb-6 border-b border-studio-border/60 pb-4">
+                <span><i class="fa-solid fa-clock text-studio-gold mr-1"></i> <span id="modal-art-time">5 dk okuma</span></span>
+                <span><i class="fa-solid fa-user-pen text-studio-shortBreak mr-1"></i> <span id="modal-art-author">Focus Studio Uzmanı</span></span>
+            </div>
+            <div id="modal-art-content" class="text-sm text-slate-200 leading-relaxed space-y-4 font-normal">
+                <!-- Article Content Injected via JS -->
+            </div>
+            <div class="mt-8 pt-4 border-t border-studio-border/60 flex justify-between items-center">
+                <span class="text-xs text-slate-400"><i class="fa-solid fa-sparkles text-studio-gold mr-1"></i> Okumayı tamamladığınızda XP kazanırsınız!</span>
+                <button onclick="completeArticleRead()" id="btn-complete-read" class="bg-studio-accent hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs transition shadow-lg shadow-studio-accent/20">
+                    <i class="fa-solid fa-check mr-1.5"></i> Okudum (+25 XP)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PDF VIEWER & PREVIEW -->
+    <div id="pdf-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-6 md:p-8 relative border border-studio-border">
+            <button onclick="closePdfModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white w-9 h-9 rounded-full bg-studio-dark flex items-center justify-center border border-studio-border transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div>
+                    <h3 id="modal-pdf-title" class="text-xl font-black text-white font-display">PDF Başlığı</h3>
+                    <span id="modal-pdf-tag" class="text-xs text-studio-accent font-semibold">9. Sınıf - Matematik</span>
+                </div>
+            </div>
+            <p id="modal-pdf-desc" class="text-xs text-slate-300 leading-relaxed mb-6">Bu materyal, ilgili dersin temel konularını kapsayan özet föyleri ve çözümlü soru örneklerini içermektedir.</p>
+            
+            <div class="p-4 bg-studio-dark/90 rounded-xl border border-studio-border mb-6 text-xs text-slate-300 space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Sayfa Sayısı:</span>
+                    <strong id="modal-pdf-pages" class="text-white">24 Sayfa</strong>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">İçerik Türü:</span>
+                    <strong id="modal-pdf-type" class="text-white">Konu Anlatımı & Test</strong>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="downloadPdfSimulated()" class="flex-1 bg-studio-shortBreak hover:bg-blue-600 text-white font-black py-3 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> PDF Dosyasını İndir / İncele
+                </button>
+                <button onclick="markPdfStudied()" class="bg-studio-accent hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 rounded-xl text-xs transition">
+                    <i class="fa-solid fa-circle-check"></i> Çalışıldı İşaretle (+30 XP)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-t border-studio-border/60 bg-studio-dark/80 py-4 px-6 text-center text-xs text-slate-500">
+        <p>Focus Studio AI Pro &copy; 2026 - Akıllı Ders Planlayıcı, Makaleler ve Sınıf Kütüphanesi</p>
+    </footer>
+
+    <script>
+        // Global Application State
+        let userState = {
+            level: 1,
+            xp: 35,
+            maxXp: 100,
+            streak: 1,
+            completedPomoCount: 0,
+            selectedMascot: '🦉',
+            usedAI: false,
+            achievements: { badge1: true, badge2: false, badge3: false, badge4: false }
+        };
+
+        // Pomodoro State
+        let timerModes = {
+            pomo: { name: "Odak", duration: 25 * 60, color: "#FF5E62" },
+            shortBreak: { name: "Mola", duration: 5 * 60, color: "#3B82F6" },
+            longBreak: { name: "Uzun Mola", duration: 15 * 60, color: "#8B5CF6" }
+        };
+
+        let currentMode = 'pomo';
+        let timeLeft = timerModes.pomo.duration;
+        let totalDuration = timerModes.pomo.duration;
+        let timerInterval = null;
+        let isRunning = false;
+        let sessionCount = 1;
+
+        // Audio State
+        let audioCtx = null;
+        let activeSound = null;
+        let activeGain = null;
+        let activeSourceNode = null;
+
+        // Task Database
+        let currentFilter = 'all';
+        let tasks = [
+            { id: 1, title: 'Matematik Notlarını İncele & 10 Soru Çöz', tag: 'Matematik', completed: true },
+            { id: 2, title: '25 Dakika Python Algoritma Çalışması', tag: 'Yazılım', completed: false }
+        ];
+
+        // Editable Weekly Plan State (Default empty so users can write!)
+        let weeklyPlan = {
+            "Pazartesi": [],
+            "Salı": [],
+            "Çarşamba": [],
+            "Perşembe": [],
+            "Cuma": [],
+            "Cumartesi": [],
+            "Pazar": []
+        };
+
+        // Articles Database
+        const articles = [
+            {
+                id: 1,
+                title: "Feynman Tekniği ile Karmaşık Konuları 5 Dakikada Anla",
+                category: "teknik",
+                categoryTitle: "Çalışma Tekniği",
+                readTime: "4 dk okuma",
+                author: "Dr. Ali Yılmaz",
+                summary: "Nobel ödüllü fizikçi Richard Feynman'ın zor konuları bir çocuğa anlatır gibi sadeleştirme yöntemini keşfedin.",
+                content: `
+                    <p class="mb-3">Feynman Tekniği, öğrenmeyi pasif bir eylemden çıkarıp tam bir zihinsel ustalaşmaya dönüştürür. Dört basit adımdan oluşur:</p>
+                    <ol class="list-decimal list-inside space-y-2 mb-4 font-semibold text-slate-300">
+                        <li><strong>Konuyu Seçin:</strong> Öğrenmek istediğiniz başlığı boş bir kâğıdın en üstüne yazın.</li>
+                        <li><strong>Bir Çocuğa Anlatır Gibi Yazın:</strong> Karmaşık terimler kullanmadan, konuyu 10 yaşındaki bir çocuğa anlatıyormuş gibi açıklayın.</li>
+                        <li><strong>Tıkandığınız Yeri Bulun:</strong> Anlatırken zorlandığınız yerler, konuyu henüz tam kavramadığınız noktalardır. Hemen kaynağa geri dönün.</li>
+                        <li><strong>Basitleştirin ve Benzetmeler Kullanın:</strong> Soyut kavramları somut günlük hayat benzetmeleriyle pekiştirin.</li>
+                    </ol>
+                    <p>Bu yöntem sayesinde ezberlemek yerine konunun mantığını ömür boyu unutmayacak şekilde öğrenirsiniz.</p>
+                `
+            },
+            {
+                id: 2,
+                title: "Aralıklı Tekrar (Spaced Repetition) ve Hafıza Kanunu",
+                category: "teknik",
+                categoryTitle: "Hafıza & Öğrenme",
+                readTime: "5 dk okuma",
+                author: "Selin Kaya",
+                summary: "Unutma eğrisini alt etmek için bilgiyi 1, 3, 7 ve 30 gün aralıklarıyla nasıl tekrar etmelisiniz?",
+                content: `
+                    <p class="mb-3">Hermann Ebbinghaus'un Unutma Eğrisi araştırmasına göre, yeni öğrendiğimiz bilginin %70'ini ilk 24 saat içinde unuturuz.</p>
+                    <p class="mb-3"><strong>Optimum Tekrar Takvimi:</strong></p>
+                    <ul class="list-disc list-inside space-y-2 mb-4 text-slate-300">
+                        <li><strong>1. Tekrar:</strong> Dersin bittiği günün akşamı (10 dakika).</li>
+                        <li><strong>2. Tekrar:</strong> 3 gün sonra hızlı soru çözümü.</li>
+                        <li><strong>3. Tekrar:</strong> 1 hafta sonra özet föy taraması.</li>
+                        <li><strong>4. Tekrar:</strong> 1 ay sonra genel deneme testi.</li>
+                    </ul>
+                    <p>Bu sistem hafızadaki nöron bağlantılarını güçlendirerek bilgiyi kalıcı hafızaya taşır.</p>
+                `
+            },
+            {
+                id: 3,
+                title: "Deep Work: Bölünmeyen Derin Odaklanma Disiplini",
+                category: "motivasyon",
+                categoryTitle: "Odak & Zihin",
+                readTime: "6 dk okuma",
+                author: "Prof. Cal Newport Odak Grubu",
+                summary: "Bildirim bombardımanı altında 45 dakikalık pürüzsüz çalışma zihniyetini inşa etmek.",
+                content: `
+                    <p class="mb-3">Derin Çalışma (Deep Work), dikkatinizi sıfır kesinti ile bilişsel olarak zorlayıcı bir göreve odaklama yeteneğidir.</p>
+                    <p class="mb-3">Günümüz dünyasında sosyal medya bildirimleri zihinsel odaklanma yetimizi parçalar. Biri mesaj attığında odağınızı toplamanız ortalama 23 dakika sürer.</p>
+                    <p class="mb-3"><strong>Derin Çalışma İpuçları:</strong></p>
+                    <ul class="list-disc list-inside space-y-1 mb-4 text-slate-300">
+                        <li>Telefonunuzu başka bir odaya bırakın.</li>
+                        <li>Çalışma seansına başlamadan önce ne yapacağınızı tam olarak belirleyin.</li>
+                        <li>Focus Studio Pomodoro sayacını başlatın ve arkada yağmur sesini açın.</li>
+                    </ul>
+                `
+            }
+        ];
+
+        // Library Database (Filtered by Grade)
+        const libraryData = [
+            { id: 101, grade: '8', title: '8. Sınıf LGS Matematik Çarpanlar ve Katlar PDF', pages: '18 Sayfa', type: 'Konu & Soru Bankası', desc: 'LGS sınavı tarzında yeni nesil sorular ve adım adım çözümler.' },
+            { id: 102, grade: '8', title: '8. Sınıf Fen Bilimleri Mevsimler ve İklim Föyü', pages: '12 Sayfa', type: 'Özet Föy', desc: 'Kavram haritalı LGS Fen bilimleri konu özeti.' },
+            { id: 103, grade: '9', title: '9. Sınıf Matematik Mantık ve Kümeler Fasikülü', pages: '24 Sayfa', type: 'Konu Anlatımı', desc: 'Lise matematiğine giriş temel kavramlar ve soru kalıpları.' },
+            { id: 104, grade: '9', title: '9. Sınıf Fizik Madde ve Özellikleri PDF', pages: '16 Sayfa', type: 'Soru Bankası', desc: 'Örnek çözümlü ders notları ve konu tarama testleri.' },
+            { id: 105, grade: '10', title: '10. Sınıf Biyoloji Hücre Bölünmeleri & Kalıtım', pages: '22 Sayfa', type: 'Özet & Test', desc: 'Mitoz, mayoz ve kalıtım çaprazlamaları rehberi.' },
+            { id: 106, grade: '10', title: '10. Sınıf Kimya Kimyanın Temel Kanunları', pages: '20 Sayfa', type: 'Soru Bankası', desc: 'Mol kavramı ve tepkime hesaplamaları soru seti.' },
+            { id: 107, grade: '11', title: '11. Sınıf YKS-AYT Trigonometri Rehber Föyü', pages: '32 Sayfa', type: 'Kapsamlı Konu & Test', desc: 'Birim çember, formüller ve AYT çıkmış benzeri sorular.' },
+            { id: 108, grade: '12', title: '12. Sınıf AYT Matematik Türev ve İntegral PDF', pages: '40 Sayfa', type: 'Soru Bankası', desc: 'Derece hedefleyen öğrenciler için master soru fasikülü.' },
+            { id: 109, grade: 'uni', title: 'Python ile Programlamaya Giriş ve Veri Yapıları', pages: '50 Sayfa', type: 'Yazılım Ders Föyü', desc: 'Fonksiyonlar, döngüler, OOP ve pratik proje alıştırmaları.' }
+        ];
+
+        let selectedGradeFilter = 'all';
+        let currentActiveArticle = null;
+        let currentActivePdf = null;
+
+        function switchTab(tabName) {
+            ['main', 'articles', 'library'].forEach(t => {
+                const view = document.getElementById(`tab-view-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabName) {
+                    view.classList.remove('hidden');
+                    if (t !== 'main') view.classList.add('flex');
+                    btn.className = "px-4 py-2 rounded-xl text-slate-950 bg-studio-accent font-extrabold transition shadow-lg shadow-studio-accent/20";
+                } else {
+                    view.classList.add('hidden');
+                    view.classList.remove('flex');
+                    btn.className = "px-4 py-2 rounded-xl text-slate-400 hover:text-white transition";
+                }
+            });
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('timer-display').innerText = formatted;
+            document.title = `(${formatted}) Focus Studio - ${timerModes[currentMode].name}`;
+
+            const circle = document.getElementById('timer-progress');
+            const circumference = 2 * Math.PI * 110;
+            const offset = circumference - (timeLeft / totalDuration) * circumference;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function toggleTimer() {
+            if (isRunning) pauseTimer();
+            else startTimer();
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('btn-timer-icon').className = "fa-solid fa-pause";
+            document.getElementById('btn-timer-text').innerText = "DURDUR";
+            document.getElementById('mascot-avatar').innerText = currentMode === 'pomo' ? '🔥' : '☕';
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    completeTimerSession();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            document.getElementById('btn-timer-icon').className = "fa-solid fa-play";
+            document.getElementById('btn-timer-text').innerText = "DEVAM ET";
+            document.getElementById('mascot-avatar').innerText = userState.selectedMascot;
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timeLeft = timerModes[currentMode].duration;
+            totalDuration = timeLeft;
+            updateTimerDisplay();
+            document.getElementById('btn-timer-text').innerText = "BAŞLAT";
+        }
+
+        function skipTimerSession() {
+            pauseTimer();
+            if (currentMode === 'pomo') setTimerMode('shortBreak');
+            else setTimerMode('pomo');
+        }
+
+        function setTimerMode(mode) {
+            currentMode = mode;
+            pauseTimer();
+
+            ['pomo', 'shortBreak', 'longBreak'].forEach(m => {
+                const btn = document.getElementById(`mode-${m}`);
+                if (m === mode) {
+                    btn.className = `flex-1 py-2 rounded-xl text-xs font-bold transition-all text-white shadow-lg ${
+                        m === 'pomo' ? 'bg-studio-pomo shadow-studio-pomo/30' :
+                        m === 'shortBreak' ? 'bg-studio-shortBreak shadow-studio-shortBreak/30' :
+                        'bg-studio-longBreak shadow-studio-longBreak/30'
+                    }`;
+                } else {
+                    btn.className = "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-slate-400 hover:text-white";
+                }
+            });
+
+            const color = timerModes[mode].color;
+            document.getElementById('timer-progress').setAttribute('stroke', color);
+            document.getElementById('pomo-glow').style.backgroundColor = `${color}25`;
+
+            timeLeft = timerModes[mode].duration;
+            totalDuration = timeLeft;
+            updateTimerDisplay();
+        }
+
+        function setCustomMinutes(mins) {
+            timerModes[currentMode].duration = mins * 60;
+            resetTimer();
+            showNotification(`Sayaç ${mins} dakikaya ayarlandı!`);
+        }
+
+        function completeTimerSession() {
+            pauseTimer();
+            playBeepSound();
+
+            if (currentMode === 'pomo') {
+                sessionCount++;
+                userState.completedPomoCount++;
+                document.getElementById('timer-session-tag').innerText = `Çalışma Oturumu #${sessionCount}`;
+                addXP(50);
+                showNotification("🎉 Odaklanma seansı tamamlandı! +50 XP!");
+                if (sessionCount % 4 === 0) setTimerMode('longBreak');
+                else setTimerMode('shortBreak');
+            } else {
+                showNotification("☕ Mola süresi doldu! Yeni ders oturumuna hazır mısın?");
+                setTimerMode('pomo');
+            }
+        }
+
+        function addXP(amount) {
+            userState.xp += amount;
+            if (userState.xp >= userState.maxXp) {
+                userState.xp -= userState.maxXp;
+                userState.level++;
+                userState.maxXp = Math.floor(userState.maxXp * 1.25);
+                triggerConfetti();
+                showNotification(`🌟 TEBRİKLER! Seviye ${userState.level}'e ulaştınız!`);
+            }
+            updateUserStatsUI();
+        }
+
+        function updateUserStatsUI() {
+            document.getElementById('ui-level').innerText = userState.level;
+            document.getElementById('ui-streak').innerText = `${userState.streak} Gün`;
+            const xpPct = Math.min(100, Math.floor((userState.xp / userState.maxXp) * 100));
+            document.getElementById('ui-xp-bar').style.width = `${xpPct}%`;
+            document.getElementById('ui-xp-text').innerText = `${userState.xp}/${userState.maxXp} XP`;
+        }
+
+        function petMascot() {
+            const mascot = document.getElementById('mascot-avatar');
+            mascot.classList.add('scale-150', 'rotate-12');
+            setTimeout(() => mascot.classList.remove('scale-150', 'rotate-12'), 300);
+            showNotification(`Maskotun ${userState.selectedMascot} sana verimli çalışmalar diler!`);
+        }
+
+        function triggerAIResponse(text) {
+            document.getElementById('ai-text').innerText = text;
+        }
+
+        function generateAITasks() {
+            const sampleAITasks = [
+                { title: 'AI Önerisi: 5 Tane Zor Problem Çöz', tag: 'Matematik' },
+                { title: 'AI Önerisi: Konu Özetini Sesli Olarak Tekrar Et', tag: 'Genel' },
+                { title: 'AI Önerisi: 15 Dakika Yazılım Alıştırması Yap', tag: 'Yazılım' }
+            ];
+            const randomTask = sampleAITasks[Math.floor(Math.random() * sampleAITasks.length)];
+            tasks.push({ id: Date.now(), title: randomTask.title, tag: randomTask.tag, completed: false });
+            renderTasks();
+            addXP(15);
+            triggerAIResponse(`🤖 Akıllı görev eklendi: "${randomTask.title}". (+15 XP)`);
+        }
+
+        function askAITutor(type) {
+            if (type === 'tip') {
+                triggerAIResponse("💡 **Feynman Tekniği**: Öğrendiğin konuyu karmaşık terimler kullanmadan 10 yaşında birine anlatır gibi sadeleştir.");
+            } else {
+                triggerAIResponse("🎓 **Aktif Hatırlama**: Notları tekrar tekrar okumak yerine kapatıp kendinizi test etmek öğrenme kalıcılığını 3 kat arttırır.");
+            }
+        }
+
+        function handleAIQuery(e) {
+            e.preventDefault();
+            const input = document.getElementById('ai-input');
+            const query = input.value.trim();
+            if (!query) return;
+            triggerAIResponse(`🤖 "${query}" sorusu için AI Tavsiyesi: Konuyu küçük parçalara bölüp Pomodoro tekniği ile odaklanarak pratik yapabilirsin!`);
+            input.value = '';
+            addXP(10);
+        }
+
+        function initAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function toggleAmbientSound(type) {
+            initAudioContext();
+            if (activeSound === type) {
+                stopAmbientSound();
+                return;
+            }
+            stopAmbientSound();
+            activeSound = type;
+
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+
+            activeSourceNode = audioCtx.createBufferSource();
+            activeSourceNode.buffer = buffer;
+            activeSourceNode.loop = true;
+
+            const filter = audioCtx.createBiquadFilter();
+            if (type === 'rain') filter.type = 'lowpass', filter.frequency.value = 750;
+            else if (type === 'cafe') filter.type = 'bandpass', filter.frequency.value = 1100;
+            else if (type === 'waves') filter.type = 'lowpass', filter.frequency.value = 450;
+            else if (type === 'white') filter.type = 'lowpass', filter.frequency.value = 2000;
+
+            activeGain = audioCtx.createGain();
+            activeGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+
+            activeSourceNode.connect(filter);
+            filter.connect(activeGain);
+            activeGain.connect(audioCtx.destination);
+            activeSourceNode.start();
+            showNotification(`🔊 ${type.toUpperCase()} odak sesi başlatıldı.`);
+        }
+
+        function stopAmbientSound() {
+            if (activeSourceNode) {
+                try { activeSourceNode.stop(); activeSourceNode.disconnect(); } catch(e){}
+                activeSourceNode = null;
+            }
+            activeSound = null;
+        }
+
+        function playBeepSound() {
+            try {
+                initAudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            } catch (e) {}
+        }
+
+        // DYNAMIC WEEKLY PLANNER ENGINE
+        function renderWeeklyPlan() {
+            const container = document.getElementById('weekly-plan-container');
+            container.innerHTML = '';
+
+            const daysList = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+
+            daysList.forEach(day => {
+                const dayItems = weeklyPlan[day] || [];
+                const dayCard = document.createElement('div');
+                dayCard.className = "bg-studio-dark/80 border border-studio-border rounded-xl p-3 flex flex-col justify-between text-xs";
+
+                let itemsHtml = dayItems.map((item, idx) => `
+                    <div class="flex items-center justify-between gap-1 bg-studio-card/80 p-1.5 rounded-lg border border-studio-border/50 my-1">
+                        <span class="${item.completed ? 'line-through text-slate-500' : 'text-slate-200'} font-medium truncate cursor-pointer flex-1" onclick="toggleWeeklyItem('${day}', ${idx})">
+                            ${item.text}
+                        </span>
+                        <button onclick="removeWeeklyItem('${day}', ${idx})" class="text-slate-500 hover:text-rose-400 text-[10px] px-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+                dayCard.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-extrabold text-studio-shortBreak uppercase tracking-wider text-[11px]">${day}</span>
+                            <span class="text-[9px] text-slate-500">${dayItems.length} Görev</span>
+                        </div>
+                        <div class="space-y-1 mb-2 max-h-[100px] overflow-y-auto">
+                            ${itemsHtml || '<p class="text-[10px] text-slate-600 italic">Plan eklenmedi...</p>'}
+                        </div>
+                    </div>
+                    <form onsubmit="addWeeklyItem(event, '${day}')" class="flex gap-1 mt-2">
+                        <input type="text" id="input-day-${day}" placeholder="Ders/Plan yaz..." class="w-full bg-studio-dark border border-studio-border rounded-lg px-2 py-1 text-[11px] text-white focus:outline-none focus:border-studio-shortBreak">
+                        <button type="submit" class="bg-studio-shortBreak hover:bg-blue-600 text-white font-bold px-2 rounded-lg text-xs flex items-center justify-center">
+                            +
+                        </button>
+                    </form>
+                `;
+                container.appendChild(dayCard);
+            });
+        }
+
+        function addWeeklyItem(e, day) {
+            e.preventDefault();
+            const input = document.getElementById(`input-day-${day}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!weeklyPlan[day]) weeklyPlan[day] = [];
+            weeklyPlan[day].push({ text: text, completed: false });
+            input.value = '';
+            saveWeeklyPlan();
+            renderWeeklyPlan();
+            showNotification(`📅 ${day} gününe plan eklendi.`);
+        }
+
+        function toggleWeeklyItem(day, index) {
+            if (weeklyPlan[day] && weeklyPlan[day][index]) {
+                weeklyPlan[day][index].completed = !weeklyPlan[day][index].completed;
+                saveWeeklyPlan();
+                renderWeeklyPlan();
+            }
+        }
+
+        function removeWeeklyItem(day, index) {
+            if (weeklyPlan[day]) {
+                weeklyPlan[day].splice(index, 1);
+                saveWeeklyPlan();
+                renderWeeklyPlan();
+            }
+        }
+
+        function clearAllWeeklyPlan() {
+            if (confirm("Tüm haftalık planı temizlemek istediğinize emin misiniz?")) {
+                weeklyPlan = { "Pazartesi": [], "Salı": [], "Çarşamba": [], "Perşembe": [], "Cuma": [], "Cumartesi": [], "Pazar": [] };
+                saveWeeklyPlan();
+                renderWeeklyPlan();
+                showNotification("🧹 Haftalık plan temizlendi.");
+            }
+        }
+
+        function saveWeeklyPlan() {
+            localStorage.setItem('focus_weekly_plan', JSON.stringify(weeklyPlan));
+        }
+
+        function loadWeeklyPlan() {
+            const saved = localStorage.getItem('focus_weekly_plan');
+            if (saved) {
+                try { weeklyPlan = JSON.parse(saved); } catch(e){}
+            }
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('task-list');
+            list.innerHTML = '';
+
+            let filteredTasks = tasks;
+            if (currentFilter === 'active') filteredTasks = tasks.filter(t => !t.completed);
+            if (currentFilter === 'completed') filteredTasks = tasks.filter(t => t.completed);
+
+            const completedCount = tasks.filter(t => t.completed).length;
+            document.getElementById('task-counter').innerText = `${completedCount}/${tasks.length} Tamamlandı`;
+
+            if (filteredTasks.length === 0) {
+                list.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">Henüz hedef eklenmedi.</div>`;
+                return;
+            }
+
+            filteredTasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `p-3.5 rounded-xl border flex items-center justify-between gap-3 text-xs transition ${
+                    task.completed 
+                    ? 'bg-studio-dark/40 border-studio-border/40 text-slate-500 line-through' 
+                    : 'bg-studio-dark/90 border-studio-border text-slate-200 hover:border-studio-accent/50'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onclick="toggleTask(${task.id})">
+                        <i class="fa-solid ${task.completed ? 'fa-circle-check text-studio-accent text-base' : 'fa-circle text-slate-600 text-base'}"></i>
+                        <span class="truncate font-semibold">${task.title}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-md bg-studio-card text-slate-400 border border-studio-border/60 ml-auto">${task.tag}</span>
+                    </div>
+                    <button onclick="deleteTask(${task.id})" class="text-slate-500 hover:text-rose-400 transition px-2 py-1">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function handleAddTask(e) {
+            e.preventDefault();
+            const input = document.getElementById('task-input');
+            const tagSelect = document.getElementById('task-tag');
+            const title = input.value.trim();
+            if (!title) return;
+
+            tasks.push({ id: Date.now(), title: title, tag: tagSelect.value, completed: false });
+            input.value = '';
+            addXP(20);
+            renderTasks();
+            showNotification("✅ Çalışma hedefi eklendi! (+20 XP)");
+        }
+
+        function toggleTask(id) {
+            tasks = tasks.map(t => {
+                if (t.id === id) {
+                    if (!t.completed) { addXP(30); showNotification("🎯 Hedef tamamlandı! +30 XP"); }
+                    return { ...t, completed: !t.completed };
+                }
+                return t;
+            });
+            renderTasks();
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['all', 'active', 'completed'].forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) btn.className = "text-xs font-extrabold px-3.5 py-1.5 rounded-lg bg-studio-accent text-slate-950 transition";
+                else btn.className = "text-xs font-extrabold px-3.5 py-1.5 rounded-lg bg-studio-dark text-slate-400 hover:text-white border border-studio-border transition";
+            });
+            renderTasks();
+        }
+
+        // ARTICLES ENGINE
+        function renderArticles(filter = 'all') {
+            const grid = document.getElementById('articles-grid');
+            grid.innerHTML = '';
+
+            let filtered = articles;
+            if (filter !== 'all') filtered = articles.filter(a => a.category === filter);
+
+            filtered.forEach(art => {
+                const card = document.createElement('div');
+                card.className = "glass-card-sm p-6 flex flex-col justify-between hover:border-studio-ai/50 transition cursor-pointer group";
+                card.onclick = () => openArticleModal(art.id);
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-extrabold uppercase tracking-widest bg-studio-ai/20 text-studio-ai px-2.5 py-0.5 rounded-full border border-studio-ai/30">${art.categoryTitle}</span>
+                            <span class="text-[10px] text-slate-400"><i class="fa-solid fa-clock mr-1"></i>${art.readTime}</span>
+                        </div>
+                        <h3 class="font-extrabold text-base text-white group-hover:text-studio-ai transition mb-2 font-display line-clamp-2">${art.title}</h3>
+                        <p class="text-xs text-slate-400 line-clamp-3 mb-4">${art.summary}</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-studio-border/50 text-xs">
+                        <span class="text-slate-500 font-medium"><i class="fa-solid fa-pen text-studio-gold mr-1"></i>${art.author}</span>
+                        <span class="text-studio-ai font-bold group-hover:translate-x-1 transition flex items-center gap-1">Oku <i class="fa-solid fa-arrow-right"></i></span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterArticles(type) {
+            renderArticles(type);
+        }
+
+        function openArticleModal(artId) {
+            const art = articles.find(a => a.id === artId);
+            if (!art) return;
+
+            currentActiveArticle = art;
+            document.getElementById('modal-art-category').innerText = art.categoryTitle;
+            document.getElementById('modal-art-title').innerText = art.title;
+            document.getElementById('modal-art-time').innerText = art.readTime;
+            document.getElementById('modal-art-author').innerText = art.author;
+            document.getElementById('modal-art-content').innerHTML = art.content;
+
+            const modal = document.getElementById('article-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeArticleModal() {
+            const modal = document.getElementById('article-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function completeArticleRead() {
+            addXP(25);
+            showNotification("📖 Makaleyi tamamladın! +25 XP!");
+            closeArticleModal();
+        }
+
+        // LIBRARY ENGINE
+        function selectGrade(grade) {
+            selectedGradeFilter = grade;
+            document.querySelectorAll('.grade-tab-btn').forEach(btn => {
+                if (btn.id === `grade-btn-${grade}`) {
+                    btn.className = "grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-accent text-slate-950 transition";
+                } else {
+                    btn.className = "grade-tab-btn shrink-0 px-4 py-2 rounded-xl text-xs font-black bg-studio-dark border border-studio-border text-slate-300 hover:text-white transition";
+                }
+            });
+            renderLibrary();
+        }
+
+        function renderLibrary() {
+            const grid = document.getElementById('library-grid');
+            const searchVal = document.getElementById('library-search').value.toLowerCase().trim();
+            grid.innerHTML = '';
+
+            let filtered = libraryData;
+            if (selectedGradeFilter !== 'all') {
+                filtered = filtered.filter(item => item.grade === selectedGradeFilter);
+            }
+            if (searchVal) {
+                filtered = filtered.filter(item => item.title.toLowerCase().includes(searchVal) || item.desc.toLowerCase().includes(searchVal));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500 text-xs">Aramanıza uygun PDF kaynağı bulunamadı.</div>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "glass-card-sm p-6 flex flex-col justify-between border border-studio-border hover:border-studio-accent/50 transition group";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold shrink-0">
+                                <i class="fa-solid fa-file-pdf text-lg"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-extrabold text-studio-accent uppercase tracking-wider block">${item.grade === 'uni' ? 'Yazılım/Üni' : item.grade + '. Sınıf'}</span>
+                                <span class="text-[10px] text-slate-400">${item.type}</span>
+                            </div>
+                        </div>
+                        <h3 class="font-extrabold text-sm text-white group-hover:text-studio-accent transition mb-2 font-display">${item.title}</h3>
+                        <p class="text-xs text-slate-400 line-clamp-2 mb-4">${item.desc}</p>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-studio-border/50 text-xs">
+                        <span class="text-slate-500 font-medium">${item.pages}</span>
+                        <button onclick="openPdfModal(${item.id})" class="bg-studio-dark hover:bg-studio-border border border-studio-border text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-eye text-studio-accent"></i> İncele
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openPdfModal(pdfId) {
+            const pdf = libraryData.find(p => p.id === pdfId);
+            if (!pdf) return;
+
+            currentActivePdf = pdf;
+            document.getElementById('modal-pdf-title').innerText = pdf.title;
+            document.getElementById('modal-pdf-tag').innerText = `${pdf.grade === 'uni' ? 'Üniversite/Yazılım' : pdf.grade + '. Sınıf'} Materyali`;
+            document.getElementById('modal-pdf-desc').innerText = pdf.desc;
+            document.getElementById('modal-pdf-pages').innerText = pdf.pages;
+            document.getElementById('modal-pdf-type').innerText = pdf.type;
+
+            const modal = document.getElementById('pdf-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePdfModal() {
+            const modal = document.getElementById('pdf-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function downloadPdfSimulated() {
+            showNotification(`📥 "${currentActivePdf ? currentActivePdf.title : 'PDF'}" indiriliyor...`);
+        }
+
+        function markPdfStudied() {
+            addXP(30);
+            showNotification("📚 Ders materyali çalışıldı işaretlendi! +30 XP!");
+            closePdfModal();
+        }
+
+        function saveScratchpad() {
+            const text = document.getElementById('scratchpad').value;
+            localStorage.setItem('focus_studio_notes', text);
+        }
+
+        function loadScratchpad() {
+            const saved = localStorage.getItem('focus_studio_notes');
+            if (saved) document.getElementById('scratchpad').value = saved;
+        }
+
+        function showNotification(msg) {
+            const toast = document.createElement('div');
+            toast.className = "toast fixed bottom-6 right-6 z-50 bg-studio-card border border-studio-accent text-white font-bold text-xs px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2";
+            toast.innerHTML = `<i class="fa-solid fa-circle-info text-studio-accent"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+            }
+        }
+
+        window.onload = () => {
+            updateTimerDisplay();
+            loadWeeklyPlan();
+            renderWeeklyPlan();
+            renderTasks();
+            renderArticles();
+            renderLibrary();
+            loadScratchpad();
+            updateUserStatsUI();
+        };
+    </script>
+</body>
+</html>
