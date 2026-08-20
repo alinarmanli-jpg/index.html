@@ -1307,5 +1307,56 @@
         };   
 </script>
     <a href="https://visitorbadge.io/status?path=https%3A%2F%2Falinarmanli-jpg.github.io%2Findex.html%2F"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Falinarmanli-jpg.github.io%2Findex.html%2F&label=Ziyaret%C3%A7iler&labelColor=%23111827&countColor=%23d9e3f0" /></a>
+    <!-- LGS Geri Sayım Kartı -->
+<div id="lgs-card">
+  <h2>🎯 LGS'YE KALAN SÜRE</h2>
+  <div id="lgs-days">...</div>
+  <p>Her gün otomatik güncellenir.</p>
+</div>
+
+<style>
+#lgs-card{
+  max-width: 700px;
+  margin: 30px auto;
+  padding: 25px;
+  border-radius: 22px;
+  background: linear-gradient(135deg,#2563EB,#7C3AED);
+  color:white;
+  text-align:center;
+  box-shadow:0 10px 35px rgba(0,0,0,.35);
+  font-family:Arial,sans-serif;
+}
+
+#lgs-card h2{
+  margin:0 0 10px;
+  font-size:28px;
+}
+
+#lgs-days{
+  font-size:56px;
+  font-weight:bold;
+  margin:12px 0;
+}
+
+#lgs-card p{
+  opacity:.9;
+}
+</style>
+
+<script>
+const lgsDate = new Date("2027-06-06T09:30:00");
+
+function updateLGSCountdown(){
+  const now = new Date();
+  const diff = lgsDate - now;
+  const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+
+  document.getElementById("lgs-days").textContent =
+    days === 0 ? "BUGÜN!" : `${days} Gün`;
+}
+
+updateLGSCountdown();
+setInterval(updateLGSCountdown, 60000);
+</script>
 </body>
 </html>
