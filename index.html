@@ -1306,5 +1306,18 @@
             updateUserStatsUI();
         };
     </script>
+    <script>
+async function ziyaretciSayisi() {
+  try {
+    const veri = await fetch("https://api.countapi.xyz/hit/focusstudio-atakan/ziyaretci")
+      .then(r => r.json());
+
+    document.getElementById("ziyaretci").textContent = veri.value;
+  } catch (e) {
+    document.getElementById("ziyaretci").textContent = "?";
+  }
+}
+ziyaretciSayisi();
+</script>
 </body>
 </html>
