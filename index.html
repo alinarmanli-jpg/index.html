@@ -1304,40 +1304,8 @@
             renderLibrary();
             loadScratchpad();
             updateUserStatsUI();
-        };
-    
-    
-
-    
-    
+        };   
 </script>
-    <!-- Sağ altta ziyaretçi sayacı -->
-<div id="visitor-box">👥 <span id="visitor-count">0</span></div>
-
-<style>
-#visitor-box{
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #1f2937;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-family: Arial, sans-serif;
-  font-weight: bold;
-  z-index: 9999;
-}
-</style>
-
-<script>
-(async () => {
-  try {
-    const res = await fetch("https://api.countapi.xyz/hit/focusstudio-atakan/ziyaret");
-    const data = await res.json();
-    document.getElementById("visitor-count").textContent = data.value;
-  } catch (e) {
-    document.getElementById("visitor-count").textContent = "Hata";
-  }
-})();
+    <a href="https://visitorbadge.io/status?path=https%3A%2F%2Falinarmanli-jpg.github.io%2Findex.html%2F"><img src="https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Falinarmanli-jpg.github.io%2Findex.html%2F&label=Ziyaret%C3%A7iler&labelColor=%23111827&countColor=%23d9e3f0" /></a>
 </body>
 </html>
