@@ -723,7 +723,7 @@
             const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             
             document.getElementById('timer-display').innerText = formatted;
-            document.title = `(${formatted}) Focus Studio - ${timerModes[currentMode].name}`;
+           document.title = `(${formatted}) Relax Study - ${timerModes[currentMode].name}`;
 
             const circle = document.getElementById('timer-progress');
             const circumference = 2 * Math.PI * 110;
