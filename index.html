@@ -139,7 +139,7 @@
   </div>
 </div>
 
-<header>
+
 <div id="welcome-user" class="hidden text-right mr-3">
     <p class="text-xs text-slate-400">Hoş geldin</p>
     <strong id="welcome-name" class="text-white text-sm">Kullanıcı</strong>
@@ -784,6 +784,14 @@
             document.getElementById('btn-timer-text').innerText = "DEVAM ET";
             document.getElementById('mascot-avatar').innerText = userState.selectedMascot;
         }
+      function saveUserState() {
+    localStorage.setItem("relax_user_state", JSON.stringify(userState));
+}
+
+function loadUserState() {
+    const saved = localStorage.getItem("relax_user_state");
+    if (saved) userState = JSON.parse(saved);
+}
 
         function resetTimer() {
             pauseTimer();
@@ -859,6 +867,7 @@
                 showNotification(`🌟 TEBRİKLER! Seviye ${userState.level}'e ulaştınız!`);
             }
             updateUserStatsUI();
+          saveUserState();
         }
 
         function updateUserStatsUI() {
@@ -1325,6 +1334,7 @@
         }
 
         window.onload = () => {
+          loadUserState();
             updateTimerDisplay();
             loadWeeklyPlan();
             renderWeeklyPlan();
