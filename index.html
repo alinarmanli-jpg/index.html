@@ -121,6 +121,29 @@
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-studio-pomo selection:text-white">
+  <!-- Relax Giriş Ekranı -->
+<div id="login-screen" class="fixed inset-0 bg-studio-dark flex items-center justify-center z-[9999]">
+  <div class="glass-card p-8 w-[350px] text-center">
+    <h1 class="text-3xl font-black mb-2">Relax</h1>
+    <p class="text-slate-400 text-sm mb-5">Hoş geldin! Devam etmek için adını yaz.</p>
+
+    <input id="username-input"
+      type="text"
+      placeholder="Adın..."
+      class="w-full bg-studio-card border border-studio-border rounded-xl p-3 text-center text-white placeholder-slate-500 mb-4 focus:outline-none focus:border-studio-accent">
+
+    <button onclick="createProfile()"
+      class="w-full bg-studio-accent hover:bg-emerald-400 text-black font-black py-3 rounded-xl transition">
+      Başlayalım 🚀
+    </button>
+  </div>
+</div>
+
+<header>
+<div id="welcome-user" class="hidden text-right mr-3">
+    <p class="text-xs text-slate-400">Hoş geldin</p>
+    <strong id="welcome-name" class="text-white text-sm">Kullanıcı</strong>
+</div>
 
     <header class="border-b border-studio-border/60 bg-studio-dark/90 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
         <!-- Logo & Title -->
@@ -1310,7 +1333,43 @@
             renderLibrary();
             loadScratchpad();
             updateUserStatsUI();
-        };   
+        };
+      // Relax Profil Sistemi
+function createProfile() {
+    const name = document.getElementById("username-input").value.trim();
+
+    if (!name) {
+        alert("Lütfen adını yaz.");
+        return;
+    }
+
+    const profile = {
+        name: name,
+        id: "RS-" + Math.floor(100000 + Math.random() * 900000)
+    };
+
+    localStorage.setItem("relax_profile", JSON.stringify(profile));
+
+    document.getElementById("login-screen").style.display = "none";
+}
+
+window.addEventListener("load", () => {
+    const profile = localStorage.getItem("relax_profile");
+
+    if (profile) {
+        document.getElementById("login-screen").style.display = "none";
+    }
+});
+      window.addEventListener("load", () => {
+    const profile = JSON.parse(localStorage.getItem("relax_profile"));
+
+    if (profile) {
+        document.getElementById("login-screen").style.display = "none";
+
+        document.getElementById("welcome-user").classList.remove("hidden");
+        document.getElementById("welcome-name").innerText = profile.name + " 👋";
+    }
+});
 
 </script>
     <!-- LGS 2027 Geri Sayım -->
@@ -1320,6 +1379,7 @@
   <div id="lgs-days">...</div>
   <p>Hedef tarih: 6 Haziran 2027 (tahmini)</p>
 </div>
+
 
 <style>
 #lgs-card{
